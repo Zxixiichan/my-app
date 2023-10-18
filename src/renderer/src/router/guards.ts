@@ -49,7 +49,8 @@ const initRouter = (menuList:any[])=>{
     // 把原始数组克隆一份
     const newMenus = menuList || [];
     let menu = [...newMenus]
-
+    console.log(menu);
+    
     // 路由数组的数据重构的方法，在这里调用
     let menuRouter = filterAsyncRouter(menu)
     console.log('重构后数据',menuRouter);
@@ -58,7 +59,8 @@ const initRouter = (menuList:any[])=>{
     
 }
 // 路由菜单数据的重构
-const filterAsyncRouter = (routerMap:any[])=>{ //routerMap里的数据是将原始数据复制之后的数据
+const filterAsyncRouter = (routerMap:any[])=>{ //routerMap里的数据是将原始数据复制之后得到的
+    
     const accessdRouters:object[] = []
     routerMap.forEach(item=>{
         let route ={
@@ -66,7 +68,11 @@ const filterAsyncRouter = (routerMap:any[])=>{ //routerMap里的数据是将原�
             name:item.name,//字符串
             meta:item.meta,//Proxy(Object)
             children:item.children?filterAsyncRouter(item.children) : null,//Array
-            component: loadComponent(item.path)
+            component: loadComponent(item.component) //()=>import("src/views/system/role/index.vue")
+            //item.component
+                //system/user/index
+                //......
+                //system/role/index
         }
         accessdRouters.push(route)
     })
@@ -75,25 +81,26 @@ const filterAsyncRouter = (routerMap:any[])=>{ //routerMap里的数据是将原�
 
 //检索文件
 const modulesPath = import.meta.glob('@renderer/views/**/*.vue') 
-const modulesMap = {}
+const modulesMap = {}//用于简化文件路径
 //Object.keys返回一个由对象的键组成的数组
 Object.keys(modulesPath).forEach(key=>{
-    //key是每个文件的路径，把它们重构成和routerMap的item.component一样的内容
-    const componentName = key.replace('/src/views','').replace('.vue','')
-    //console.log(componentName); 
-        //system/role/index
-        //login/Login
-        //login/module/User
-        //......
-    if(key.includes('index')){
-        modulesMap[`${componentName}/index`] = modulesPath[key]
-    }
+    //key是每个文件的路径，把它们重构成和routerMap的item.component一样的结构
+    const componentName = key.replace('/src/views/','').replace('.vue','')
+    // 将重构之后的路径当做modulesMap对象的属性，将原来的路径当做属性值
     modulesMap[componentName] = modulesPath[key]
+    // console.log(modulesMap); 
+        //login/Login：()=>import("src/views/login/login.vue")
+        //login/module/User
+        //system/role/index:()=>import("src/views/system/role/index.vue")
 }) 
+console.log(modulesMap); 
 
 // 包装动态路由组件路径
-const loadComponent = (originPath)=>{
-
+const loadComponent = (component)=>{
+    //如果后端返回的item.component存在，返回modulesMap[后端返回的路径]
+    if(component){
+        return modulesMap[component] //system/role/index: 
+    }
 }
 
 
