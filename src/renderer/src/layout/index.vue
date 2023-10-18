@@ -80,13 +80,17 @@ let nextMenuList = ref([])
 // 生命周期
 onBeforeMount(()=>{
   menu.value = menuStore.menuList
-  // pmenu初始化的值
-  pmenu.value = route.name?route:{}
+  // 获取二级路由
+  showRouter()
 })
 //点击一级菜单
 const showMenu = (item) => {
-  pmenu.value = item
-  nextMenuList.value = item.children 
+  //pmenu.value = item
+  //nextMenuList.value = item.children 
+}
+// 获取二级路由
+const showRouter = ()=>{
+  // pmenu.value =  
 }
 </script>
 

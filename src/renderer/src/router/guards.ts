@@ -3,9 +3,12 @@ import { useMenuStore } from  "@store/useMenuStore"
 import config from "@config"
 import { ElMessage } from "element-plus"
 import AppRouter from "./index"
+import { useRouter } from "vue-router"
+let router:any = null
 
 // 全局前置导航守卫
-export const beforeEach = (to,from,next)=>{
+export const beforeEach = async (to,from,next)=>{
+    router = useRouter()
     // 判断是否已经在登录页面
     if(to.path == '/login'){
         next() // 如果已经在登录页面，直接调用next() 
@@ -19,6 +22,7 @@ export const beforeEach = (to,from,next)=>{
     // 进入后台管理系统首页  hooks => userLogin.ts：router.push('/')
     try {
         const userStore = useUserStore()
+        await userStore.initUserInfo();
         const menuStore = useMenuStore()
         // 动态路由的方法，在这里调用
         initRouter(menuStore.menuList)
@@ -46,17 +50,23 @@ export const beforeEach = (to,from,next)=>{
 }
 // 动态路由
 const initRouter = (menuList:any[])=>{
-    // 把原始数组克隆一份
+    // 把原始数组复制一份
     const newMenus = menuList || [];
     let menu = [...newMenus]
-    console.log(menu);
+    console.log('复制了原始数据',menu);
     
     // 路由数组的数据重构的方法，在这里调用
-    let menuRouter = filterAsyncRouter(menu)
+    let menuRouter:any = filterAsyncRouter(menu)
+    menuRouter = flatAsyncRoutes( menuRouter )
     console.log('重构后数据',menuRouter);
-    
 
-    
+    // 添加路由
+    menuRouter.forEach(item=>{
+        // console.log(router);
+        if(item.path!=="http://www.xuexiluxian.cn"){
+            router.addRoute('DynamicRoute',item)
+        }
+    })  
 }
 // 路由菜单数据的重构
 const filterAsyncRouter = (routerMap:any[])=>{ //routerMap里的数据是将原始数据复制之后得到的
@@ -70,9 +80,10 @@ const filterAsyncRouter = (routerMap:any[])=>{ //routerMap里的数据是将原�
             children:item.children?filterAsyncRouter(item.children) : null,//Array
             component: loadComponent(item.component) //()=>import("src/views/system/role/index.vue")
             //item.component
-                //system/user/index
-                //......
                 //system/role/index
+            //item.path
+                //system/role
+            
         }
         accessdRouters.push(route)
     })
@@ -89,20 +100,57 @@ Object.keys(modulesPath).forEach(key=>{
     // 将重构之后的路径当做modulesMap对象的属性，将原来的路径当做属性值
     modulesMap[componentName] = modulesPath[key]
     // console.log(modulesMap); 
-        //login/Login：()=>import("src/views/login/login.vue")
-        //login/module/User
+        //login/Login: ()=>import("src/views/login/Login.vue")
+        //login/module/User: ()=>import("src/views/login/User.vue")
         //system/role/index:()=>import("src/views/system/role/index.vue")
 }) 
-console.log(modulesMap); 
+console.log('简化文件路径',modulesMap); 
 
 // 包装动态路由组件路径
 const loadComponent = (component)=>{
     //如果后端返回的item.children[i].component(字符串)存在
     if(component){
-        return modulesMap[component] //system/role/index: 
+        return modulesMap[component] 
+        //modulesMap[system/role/index]: 
     }
 }
+const flatAsyncRoutes = ( routes, breadcrumb:any=[] )=>{
+    let res:any = []
+    routes.forEach(route=>{
+        const tmp = {...route}
+        if (tmp.children) {
+          let childrenBreadcrumb = [...breadcrumb];
+          childrenBreadcrumb.push(route);
+          let tmpRoute = { ...route };
+          // meta:{breadcrumb: []}
+          tmpRoute.meta.breadcrumb = childrenBreadcrumb;
 
+          delete tmpRoute.children;
+          res.push(tmpRoute);
+            //{
+            // "path": "/system",
+            // "name": "系统",
+            // "meta": {
+            //      "title": "系统",
+            //      "icon": "el-icon-setting",
+            //      "noCache": false,
+            //      "hidden": false,
+            //      "affix": false,
+            //      "link": ""
+            //      "breadcrumb": []
+            //  },
+            // },
+          //tmp.children => 当前路由对象的children； childrenBreadcrumb => 路由对象组成的数组
+          let childrenRoutes = flatAsyncRoutes(tmp.children, childrenBreadcrumb);
+          childrenRoutes.map(item => {
+              res.push(item)
+          })
+        }else{
+            res.push(tmp)
+        }
+    })
+    return res
+}
 
 
 

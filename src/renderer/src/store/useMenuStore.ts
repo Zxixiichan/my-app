@@ -27,7 +27,7 @@ export const useMenuStore = defineStore('menuId', {
     }
   },
   //开启数据缓存（持久化存储）==》可以让res.data里的数据变成响应式数据
-  persist: {
+  /*persist: {
     enabled: true, //开启数据缓存
     strategies: [
       {
@@ -35,7 +35,7 @@ export const useMenuStore = defineStore('menuId', {
         path: ['menuMap','menuList'] //配置哪些数据是需要持久化存储的，如果不写，默认都需要
       }
     ]
-  }
+  }*/
 })
 /*function normalizeMenu(routes){
   

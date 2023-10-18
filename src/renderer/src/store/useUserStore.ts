@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { getInfo } from '@api/login'
+import { useMenuStore } from '@store/useMenuStore'
 
 export const useUserStore = defineStore('userId', {
   state: () => {
@@ -16,6 +17,13 @@ export const useUserStore = defineStore('userId', {
       // res里面有permissions（用户权限）、roles[0].rolePerm（路由权限编码）、units、userInfo、wechat
       this.rolePerm = res.data.roles[0].rolePerm
       this.permissions = res.data.permissions[0]
+    },
+    // 进入后台管理系统校验
+    async initUserInfo(){
+      let res = await getInfo()
+      this.rolePerm = res.data.roles[0].rolePerm
+      this.permissions = res.data.permissions[0]
+      await useMenuStore().getMenu()
     }
   },
   //开启数据缓存（持久化存储）
