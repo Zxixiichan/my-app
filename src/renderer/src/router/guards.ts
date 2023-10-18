@@ -97,7 +97,7 @@ console.log(modulesMap);
 
 // 包装动态路由组件路径
 const loadComponent = (component)=>{
-    //如果后端返回的item.component存在，返回modulesMap[后端返回的路径]
+    //如果后端返回的item.children[i].component(字符串)存在
     if(component){
         return modulesMap[component] //system/role/index: 
     }
